@@ -1,0 +1,32 @@
+from datetime import timedelta
+
+from loguru import logger
+
+from dependency_container import Dependency
+from src.core.handler_base import HandlerBase
+from src.domains.shifts.command_repository import CommandShiftRepository
+from src.domains.shifts.commands.close_open_shifts.command import (
+    CloseOpenShiftsCommand,
+)
+from time_provider import AbstractTimeProvider
+
+
+class CloseOpenShiftsCommandHandler(HandlerBase):
+    def __init__(self, shift_repository: CommandShiftRepository) -> None:
+        self._shift_repository = shift_repository
+
+    async def handle(self, command: CloseOpenShiftsCommand) -> None:
+        now = Dependency.get(AbstractTimeProvider).now()
+        cutoff = now - timedelta(hours=command.close_after_hours)
+        shifts = await self._shift_repository.get_open_started_at_or_before(cutoff)
+
+        for shift in shifts:
+            shift.automatically_close()
+            await self._shift_repository.save(shift)
+            await self.publish_events(shift.pull_events())
+
+        logger.info(
+            "Close open shifts command completed closed_count={} cutoff={}",
+            len(shifts),
+            cutoff,
+        )

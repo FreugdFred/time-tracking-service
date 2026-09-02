@@ -1,0 +1,40 @@
+[project]
+name = "time-tracking-service"
+version = "0.1.0"
+description = "Clock a shift and track time spent."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.19.1",
+    "asyncpg>=0.30.0",
+    "fastapi>=0.141.1",
+    "loguru>=0.7.3",
+    "pydantic-settings>=2.15.0",
+    "sqlalchemy>=2.0.52",
+    "uvicorn[standard]>=0.52.4",
+    # owned packages
+    "dependency-container",
+    "time-provider",
+    "pydantic>=2.13.4",
+    "apscheduler>=3.11.3",
+    "dependency>=0.0.3",
+    "nats-py>=2.15.0",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "httpx>=0.28.1",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.uv.sources]
+dependency-container = { git = "https://github.com/FreugdFred/dependency-container.git", rev = "d9851f84ee7d3018338539333208797ff9ac37cd" }
+time-provider = { git = "https://github.com/FreugdFred/time-provider.git", rev = "6018e3929b4f63ea5ed283e438d6bdd9b93ea6fe" }
