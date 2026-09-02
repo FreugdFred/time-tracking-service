@@ -103,15 +103,17 @@ your real reference ID or omit the field when it is not part of an update.
 
 ### Timestamps
 
-Send ISO 8601 timestamps with a UTC marker or explicit offset:
+Send ISO 8601 timestamps. A UTC marker or explicit offset is preferred:
 
 ```text
 2026-09-03T08:00:00Z
 2026-09-03T10:00:00+02:00
 ```
 
-Timestamps are normalized to UTC for persistence and responses. The service
-currently accepts future time ranges when all other validation rules pass.
+If a timestamp has no timezone, the service interprets it in
+`LOCAL_TIMEZONE` (default: `Europe/Amsterdam`). All timestamps are then
+normalized to UTC for persistence and responses. The service currently accepts
+future time ranges when all other validation rules pass.
 
 Time ranges behave as half-open intervals: `[started_at, finished_at)`.
 Adjacent shifts or pauses are allowed; ranges that share actual time are not.
@@ -495,7 +497,7 @@ replay must configure that infrastructure separately.
 | `NATS_URL` | No | none | NATS connection URL. Event publication is disabled when unset. |
 | `API_KEY` | No | none | Enables `X-API-Key` authentication for shift and pause routes. |
 | `PROJECT_NAME` | No | `Time-Tracking-Service-API` | API title and NATS subject prefix. |
-| `LOCAL_TIMEZONE` | No | `Europe/Amsterdam` | Local timezone used by the service clock. |
+| `LOCAL_TIMEZONE` | No | `Europe/Amsterdam` | Timezone assumed for API timestamps that omit an offset. |
 | `SHIFT_AUTO_CLOSE_AFTER_HOURS` | No | `12` | Age after which the scheduler closes active shifts. |
 | `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. |
 | `DEBUG` | No | `false` | Enables FastAPI debug mode. |

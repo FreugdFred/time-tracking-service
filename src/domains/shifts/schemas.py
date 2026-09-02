@@ -1,13 +1,15 @@
-from datetime import datetime
 from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic.types import NonNegativeInt
 
+from src.core.schema_types import UtcDateTimeInput
+
+
 class DateRangeInput(BaseModel):
-    start: datetime
-    end: datetime
+    start: UtcDateTimeInput
+    end: UtcDateTimeInput
 
     @model_validator(mode="after")
     def validate_date_range(self) -> Self:
@@ -20,8 +22,8 @@ class SaveShiftInput(BaseModel):
     id: UUID
     reference_id: str | None = None
 
-    started_at: datetime | None = None
-    finished_at: datetime | None = None
+    started_at: UtcDateTimeInput | None = None
+    finished_at: UtcDateTimeInput | None = None
 
     automatically_closed: bool = False
     approved: bool = False
