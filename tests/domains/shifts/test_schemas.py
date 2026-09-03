@@ -4,6 +4,13 @@ from uuid import uuid4
 from src.domains.shifts.schemas import DateRangeInput, SaveShiftInput
 
 
+def test_save_shift_input_defaults_upsert_booleans_to_none() -> None:
+    input = SaveShiftInput(id=uuid4())
+
+    assert input.approved is None
+    assert input.automatically_closed is None
+
+
 def test_save_shift_input_treats_naive_datetimes_as_local_time() -> None:
     input = SaveShiftInput(
         id=uuid4(),

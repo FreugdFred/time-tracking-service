@@ -6,7 +6,7 @@ from src.core.handler_base import HandlerBase
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.commands.save_shift.command import SaveShiftCommand
 from src.domains.shifts.entity import ShiftEntity
-from src.exceptions import OverlappingException, ValidationException
+from src.exceptions import ValidationException
 
 
 class SaveShiftCommandHandler(HandlerBase):
@@ -22,18 +22,6 @@ class SaveShiftCommandHandler(HandlerBase):
         else:
             shift = self._create_entity(command)
             operation = "created"
-
-        if await self._shift_repository.has_overlap(shift):
-            logger.warning(
-                "Save shift command rejected due to overlap shift_id={}",
-                shift.id,
-            )
-            raise OverlappingException(
-                ShiftEntity,
-                identifier=str(shift.id),
-                start=shift.started_at,
-                end=shift.finished_at,
-            )
 
         shift_id = await self._shift_repository.save(shift)
         logger.info(
@@ -55,13 +43,13 @@ class SaveShiftCommandHandler(HandlerBase):
                 finished_at=command.finished_at,
             )
 
-        if "automatically_closed" in command.model_fields_set:
+        if command.automatically_closed is not None:
             shift.automatically_closed = command.automatically_closed
 
-        if "approved" in command.model_fields_set and command.approved:
+        if command.approved is True:
             shift.approve()
 
-        if "approved" in command.model_fields_set and not command.approved:
+        if command.approved is False:
             shift.disapprove()
 
         return shift
@@ -90,6 +78,10 @@ class SaveShiftCommandHandler(HandlerBase):
             reference_id=command.reference_id,
             started_at=command.started_at,
             finished_at=command.finished_at,
-            automatically_closed=command.automatically_closed,
-            approved=command.approved,
+            automatically_closed=(
+                command.automatically_closed
+                if command.automatically_closed is not None
+                else False
+            ),
+            approved=command.approved if command.approved is not None else False,
         )

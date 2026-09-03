@@ -129,12 +129,12 @@ class ShiftEntity(Shift):
             )
         )
 
-    def total_worked_hours(self, alternative_time: datetime) -> float:
-        finished_at = self.finished_at or alternative_time
+    def total_worked_hours(self, at: datetime) -> float:
+        finished_at = self.finished_at or at
         worked_time = finished_at - self.started_at
 
         for pause in self.pauses:
-            pause_finished_at = pause.finished_at or alternative_time
+            pause_finished_at = pause.finished_at or at
             worked_time -= pause_finished_at - pause.started_at
 
         return worked_time.total_seconds() / timedelta(hours=1).total_seconds()

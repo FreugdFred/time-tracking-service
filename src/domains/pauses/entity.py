@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Self
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from uuid import UUID, uuid4
 
 from src.exceptions import (
     AlreadyFinishedException,

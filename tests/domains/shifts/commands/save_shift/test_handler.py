@@ -45,6 +45,7 @@ async def test_create_persists_complete_shift(
     assert result == shift_id
     assert saved_shift.id == shift_id
     assert saved_shift.approved
+    assert not saved_shift.automatically_closed
 
 
 async def test_update_applies_complete_time_range_atomically(
@@ -76,6 +77,40 @@ async def test_update_applies_complete_time_range_atomically(
     assert saved_shift.automatically_closed
 
 
+async def test_update_distinguishes_omitted_booleans_from_false(
+    command_shift_repository: CommandShiftRepository,
+) -> None:
+    shift = ShiftEntity(
+        reference_id="employee-1",
+        started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
+        finished_at=datetime(2026, 9, 2, 10, tzinfo=UTC),
+        approved=True,
+        automatically_closed=True,
+    )
+    await command_shift_repository.save(shift)
+    handler = Dependency.get(SaveShiftCommandHandler)
+
+    await handler.handle(SaveShiftCommand(id=shift.id))
+
+    saved_shift = await command_shift_repository.get(shift.id)
+    assert saved_shift is not None
+    assert saved_shift.approved
+    assert saved_shift.automatically_closed
+
+    await handler.handle(
+        SaveShiftCommand(
+            id=shift.id,
+            approved=False,
+            automatically_closed=False,
+        )
+    )
+
+    saved_shift = await command_shift_repository.get(shift.id)
+    assert saved_shift is not None
+    assert not saved_shift.approved
+    assert not saved_shift.automatically_closed
+
+
 async def test_overlapping_shift_is_not_saved(
     command_shift_repository: CommandShiftRepository,
 ) -> None:
@@ -100,7 +135,7 @@ async def test_overlapping_shift_is_not_saved(
     assert await command_shift_repository.get(new_shift_id) is None
 
 
-async def test_updated_values_are_checked_for_overlap_before_save(
+async def test_updated_values_are_rejected_when_they_overlap(
     time_provider: FakeTimeProvider,
     command_shift_repository: CommandShiftRepository,
 ) -> None:

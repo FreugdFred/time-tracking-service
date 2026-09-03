@@ -74,10 +74,6 @@ class CommandShiftRepository:
             await session.commit()
             return db_shift.id
 
-    async def has_overlap(self, shift_entity: ShiftEntity) -> bool:
-        async with Dependency.get(AsyncSession) as session:
-            return await self._has_overlap(session, shift_entity)
-
     @staticmethod
     async def _has_overlap(
         session: AsyncSession,

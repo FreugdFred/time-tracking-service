@@ -97,10 +97,6 @@ The health endpoint remains available without an API key.
 commonly an employee ID, but the service does not interpret or validate its
 format.
 
-Swagger UI uses `"string"` as a generated placeholder. If that value is sent,
-the service stores the literal value `string`. Replace generated examples with
-your real reference ID or omit the field when it is not part of an update.
-
 ### Timestamps
 
 Send ISO 8601 timestamps. A UTC marker or explicit offset is preferred:
