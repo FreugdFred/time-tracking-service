@@ -8,6 +8,7 @@ from src.domains.shifts.entity import ShiftEntity
 from src.domains.shifts.events import (
     ShiftApprovedEvent,
     ShiftAutomaticallyClosedEvent,
+    ShiftCreatedEvent,
     ShiftDeletedEvent,
     ShiftFinishedEvent,
     ShiftFinishChangedEvent,
@@ -57,14 +58,14 @@ def test_pause_lifecycle_enforces_single_active_pause(
         started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
     )
 
-    pause = shift.start_pause()
+    pause = shift.start_pause(NOW)
 
     assert shift.active_pause == pause
     with pytest.raises(AlreadyActiveException):
-        shift.start_pause()
+        shift.start_pause(NOW)
 
     time_provider.travel(datetime(2026, 9, 2, 12, 1, tzinfo=UTC))
-    assert shift.finish_pause() == pause
+    assert shift.finish_pause(datetime(2026, 9, 2, 12, 1, tzinfo=UTC)) == pause
     assert shift.active_pause is None
 
 
@@ -75,18 +76,18 @@ def test_finishing_shift_closes_active_pause_at_same_time(
         reference_id="employee-1",
         started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
     )
-    pause = shift.start_pause()
+    pause = shift.start_pause(NOW)
 
     time_provider.travel(datetime(2026, 9, 2, 12, 1, tzinfo=UTC))
-    shift.finish()
+    shift.finish(datetime(2026, 9, 2, 12, 1, tzinfo=UTC))
 
     expected_finished_at = datetime(2026, 9, 2, 12, 1, tzinfo=UTC)
     assert shift.finished_at == expected_finished_at
     assert pause.finished_at == expected_finished_at
     with pytest.raises(AlreadyFinishedException):
-        shift.finish()
+        shift.finish(expected_finished_at)
     with pytest.raises(AlreadyFinishedException):
-        shift.start_pause()
+        shift.start_pause(expected_finished_at)
 
 
 def test_add_pause_accepts_adjacent_ranges() -> None:
@@ -310,14 +311,47 @@ def test_total_worked_hours_excludes_finished_and_active_pauses(
         ],
     )
 
-    assert finished_shift.total_worked_hours == 3.5
-    assert active_shift.total_worked_hours == 1.5
+    assert finished_shift.total_worked_hours(NOW) == 3.5
+    assert active_shift.total_worked_hours(NOW) == 1.5
 
 
-def test_start_records_shift_started_event(time_provider: FakeTimeProvider) -> None:
-    shift = ShiftEntity.start(reference_id="employee-1")
+def test_create_records_shift_created_event(time_provider: FakeTimeProvider) -> None:
+    shift = ShiftEntity.create(
+        id=uuid4(),
+        reference_id="employee-1",
+        started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
+        finished_at=datetime(2026, 9, 2, 17, tzinfo=UTC),
+        approved=True,
+    )
 
     assert shift.pull_events() == (
+        ShiftCreatedEvent(
+            reference_id=shift.reference_id,
+            shift_id=shift.id,
+            started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
+            finished_at=datetime(2026, 9, 2, 17, tzinfo=UTC),
+            automatically_closed=False,
+            approved=True,
+            occurrence_datetime=NOW,
+        ),
+    )
+
+
+def test_start_records_created_and_started_events(
+    time_provider: FakeTimeProvider,
+) -> None:
+    shift = ShiftEntity.start(reference_id="employee-1", started_at=NOW)
+
+    assert shift.pull_events() == (
+        ShiftCreatedEvent(
+            reference_id=shift.reference_id,
+            shift_id=shift.id,
+            started_at=NOW,
+            finished_at=None,
+            automatically_closed=False,
+            approved=False,
+            occurrence_datetime=NOW,
+        ),
         ShiftStartedEvent(
             reference_id=shift.reference_id,
             shift_id=shift.id,
@@ -333,7 +367,7 @@ def test_shift_lifecycle_records_events(time_provider: FakeTimeProvider) -> None
         started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
     )
 
-    shift.finish()
+    shift.finish(NOW)
     shift.change_time_range(
         started_at=datetime(2026, 9, 2, 7, tzinfo=UTC),
         finished_at=datetime(2026, 9, 2, 13, tzinfo=UTC),
@@ -370,7 +404,7 @@ def test_automatically_close_records_finished_and_automatic_events(
         started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
     )
 
-    shift.automatically_close()
+    shift.automatically_close(NOW)
 
     assert [type(event) for event in shift.pull_events()] == [
         ShiftFinishedEvent,
@@ -381,11 +415,11 @@ def test_automatically_close_records_finished_and_automatic_events(
 def test_events_are_isolated_and_can_be_pulled(
     time_provider: FakeTimeProvider,
 ) -> None:
-    first = ShiftEntity.start(reference_id="employee-1")
-    second = ShiftEntity(reference_id="employee-2")
+    first = ShiftEntity.start(reference_id="employee-1", started_at=NOW)
+    second = ShiftEntity(reference_id="employee-2", started_at=NOW)
 
     assert second.pull_events() == ()
-    assert len(first.pull_events()) == 1
+    assert len(first.pull_events()) == 2
     assert first.pull_events() == ()
 
 

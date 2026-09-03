@@ -453,6 +453,7 @@ Time-Tracking-Service-API.*
 
 Available event classes:
 
+- `ShiftCreatedEvent`
 - `ShiftStartedEvent`
 - `ShiftFinishedEvent`
 - `ShiftStartChangedEvent`

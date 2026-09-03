@@ -85,7 +85,7 @@ class SaveShiftCommandHandler(HandlerBase):
         assert command.started_at
         assert command.reference_id
 
-        return ShiftEntity(
+        return ShiftEntity.create(
             id=command.id,
             reference_id=command.reference_id,
             started_at=command.started_at,

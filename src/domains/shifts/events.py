@@ -8,6 +8,13 @@ class ShiftEvent(DomainEvent):
     shift_id: UUID
 
 
+class ShiftCreatedEvent(ShiftEvent):
+    started_at: datetime
+    finished_at: datetime | None
+    automatically_closed: bool
+    approved: bool
+
+
 class ShiftStartedEvent(ShiftEvent):
     started_at: datetime
 

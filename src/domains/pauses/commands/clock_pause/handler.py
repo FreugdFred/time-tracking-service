@@ -7,13 +7,20 @@ from src.domains.pauses.commands.clock_pause.command import ClockPauseCommand
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.exceptions import NotFoundException
+from time_provider import AbstractTimeProvider
 
 
 class ClockPauseCommandHandler(HandlerBase):
-    def __init__(self, shift_repository: CommandShiftRepository) -> None:
+    def __init__(
+        self,
+        shift_repository: CommandShiftRepository,
+        time_provider: AbstractTimeProvider,
+    ) -> None:
         self._shift_repository = shift_repository
+        self._time_provider = time_provider
 
     async def handle(self, command: ClockPauseCommand) -> UUID:
+        now = self._time_provider.now()
         shift = await self._shift_repository.get_active(command.reference_id)
         if shift is None:
             logger.warning(
@@ -31,10 +38,10 @@ class ClockPauseCommandHandler(HandlerBase):
             )
 
         if shift.active_pause is None:
-            pause = shift.start_pause()
+            pause = shift.start_pause(now)
             action = "started"
         else:
-            pause = shift.finish_pause()
+            pause = shift.finish_pause(now)
             action = "finished"
 
         await self._shift_repository.save(shift)

@@ -18,6 +18,7 @@ from src.domains.pauses.events import (
 from src.domains.shifts.events import (
     ShiftApprovedEvent,
     ShiftAutomaticallyClosedEvent,
+    ShiftCreatedEvent,
     ShiftDeletedEvent,
     ShiftFinishedEvent,
     ShiftFinishChangedEvent,
@@ -34,17 +35,11 @@ from src.exceptions import (
     UnfinishedException,
 )
 
-from dependency_container import Dependency
-from time_provider import AbstractTimeProvider
-
-
 class Shift(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     reference_id: str
 
-    started_at: datetime = Field(
-        default_factory=lambda: Dependency.get(AbstractTimeProvider).now()
-    )
+    started_at: datetime
     finished_at: datetime | None = None
 
     automatically_closed: bool = False
@@ -75,8 +70,43 @@ class ShiftEntity(Shift):
     _events: list[DomainEvent] = PrivateAttr(default_factory=list)
 
     @classmethod
-    def start(cls, reference_id: str) -> Self:
-        shift = cls(reference_id=reference_id)
+    def create(
+        cls,
+        *,
+        id: UUID,
+        reference_id: str,
+        started_at: datetime,
+        finished_at: datetime | None = None,
+        automatically_closed: bool = False,
+        approved: bool = False,
+    ) -> Self:
+        shift = cls(
+            id=id,
+            reference_id=reference_id,
+            started_at=started_at,
+            finished_at=finished_at,
+            automatically_closed=automatically_closed,
+            approved=approved,
+        )
+        shift._record_event(
+            ShiftCreatedEvent(
+                reference_id=shift.reference_id,
+                shift_id=shift.id,
+                started_at=shift.started_at,
+                finished_at=shift.finished_at,
+                automatically_closed=shift.automatically_closed,
+                approved=shift.approved,
+            )
+        )
+        return shift
+
+    @classmethod
+    def start(cls, reference_id: str, started_at: datetime) -> Self:
+        shift = cls.create(
+            id=uuid4(),
+            reference_id=reference_id,
+            started_at=started_at,
+        )
         shift._record_event(
             ShiftStartedEvent(
                 reference_id=shift.reference_id,
@@ -99,14 +129,12 @@ class ShiftEntity(Shift):
             )
         )
 
-    @property
-    def total_worked_hours(self) -> float:
-        now = Dependency.get(AbstractTimeProvider).now()
-        finished_at = self.finished_at or now
+    def total_worked_hours(self, alternative_time: datetime) -> float:
+        finished_at = self.finished_at or alternative_time
         worked_time = finished_at - self.started_at
 
         for pause in self.pauses:
-            pause_finished_at = pause.finished_at or now
+            pause_finished_at = pause.finished_at or alternative_time
             worked_time -= pause_finished_at - pause.started_at
 
         return worked_time.total_seconds() / timedelta(hours=1).total_seconds()
@@ -151,14 +179,14 @@ class ShiftEntity(Shift):
             )
         )
 
-    def start_pause(self) -> PauseEntity:
+    def start_pause(self, started_at: datetime) -> PauseEntity:
         if self.active_pause:
             raise AlreadyActiveException(PauseEntity, str(self.id))
 
         elif self.is_finished:
             raise AlreadyFinishedException(ShiftEntity, str(self.id))
 
-        new_pause = PauseEntity(shift_id=self.id)
+        new_pause = PauseEntity(shift_id=self.id, started_at=started_at)
 
         self.pauses.append(new_pause)
         self._record_event(
@@ -171,12 +199,12 @@ class ShiftEntity(Shift):
         )
         return new_pause
 
-    def finish_pause(self) -> PauseEntity:
+    def finish_pause(self, finished_at: datetime) -> PauseEntity:
         active_pause = self.active_pause
         if not active_pause:
             raise NotFoundException(PauseEntity)
 
-        active_pause.finish()
+        active_pause.finish(finished_at)
         assert active_pause.finished_at is not None
         self._record_event(
             PauseFinishedEvent(
@@ -232,11 +260,9 @@ class ShiftEntity(Shift):
         self.pauses.append(new_pause)
         return new_pause
 
-    def finish(self) -> None:
+    def finish(self, finished_at: datetime) -> None:
         if self.is_finished:
             raise AlreadyFinishedException(ShiftEntity, str(self.id))
-
-        finished_at = Dependency.get(AbstractTimeProvider).now()
 
         if finished_at <= self.started_at:
             raise InvalidTimeRangeException(
@@ -248,7 +274,7 @@ class ShiftEntity(Shift):
             )
 
         for pause in filter(lambda p: not p.is_finished, self.pauses):
-            pause.finish()
+            pause.finish(finished_at)
             assert pause.finished_at is not None
             self._record_event(
                 PauseFinishedEvent(
@@ -268,8 +294,8 @@ class ShiftEntity(Shift):
             )
         )
 
-    def automatically_close(self) -> None:
-        self.finish()
+    def automatically_close(self, finished_at: datetime) -> None:
+        self.finish(finished_at)
         self.automatically_closed = True
         self._record_event(
             ShiftAutomaticallyClosedEvent(
