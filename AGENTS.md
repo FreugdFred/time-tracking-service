@@ -139,9 +139,9 @@ When adding a route, verify all of the following:
 
 ## Coding practices
 
-- Use timezone-aware datetimes. Domain code obtains the current time through
-  `AbstractTimeProvider`; do not call `datetime.now()` directly in entities or
-  handlers.
+- Use timezone-aware datetimes. Handlers obtain the current time through an
+  injected `AbstractTimeProvider` and pass it explicitly to entities; do not
+  call `datetime.now()` directly in entities or handlers.
 - Use explicit `is None` and `is not None` checks for optional values. Do not
   use truthiness when zero, `False`, or an empty value has meaning.
 - For partial updates, distinguish omitted fields from explicitly supplied

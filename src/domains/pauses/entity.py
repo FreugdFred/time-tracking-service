@@ -1,25 +1,21 @@
 from datetime import datetime
 from typing import Self
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator
 from uuid import UUID, uuid4
 
-from dependency_container import Dependency
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
 from src.exceptions import (
     AlreadyFinishedException,
     InvalidTimeRangeException,
     UnfinishedException,
 )
-from time_provider import AbstractTimeProvider
 
 
 class Pause(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     shift_id: UUID
 
-    started_at: datetime = Field(
-        default_factory=lambda: Dependency.get(AbstractTimeProvider).now()
-    )
+    started_at: datetime
     finished_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -37,11 +33,9 @@ class PauseEntity(Pause):
     def is_finished(self) -> bool:
         return bool(self.finished_at)
 
-    def finish(self) -> None:
+    def finish(self, finished_at: datetime) -> None:
         if self.is_finished:
             raise AlreadyFinishedException(PauseEntity, str(self.id))
-
-        finished_at = Dependency.get(AbstractTimeProvider).now()
 
         if finished_at <= self.started_at:
             raise InvalidTimeRangeException(

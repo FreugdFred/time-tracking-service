@@ -36,12 +36,12 @@ def test_finish_sets_end_time_and_cannot_run_twice(
         started_at=now - timedelta(hours=1),
     )
 
-    pause.finish()
+    pause.finish(now)
 
     assert pause.finished_at == now
     assert pause.is_finished
     with pytest.raises(AlreadyFinishedException):
-        pause.finish()
+        pause.finish(now)
 
 
 def test_finish_rejects_non_positive_duration(
@@ -51,7 +51,7 @@ def test_finish_rejects_non_positive_duration(
     pause = PauseEntity(shift_id=uuid4(), started_at=now)
 
     with pytest.raises(InvalidTimeRangeException):
-        pause.finish()
+        pause.finish(now)
 
 
 def test_finished_pause_can_change_its_complete_time_range(now: datetime) -> None:
@@ -104,9 +104,9 @@ def test_shift_records_pause_lifecycle_events(
         started_at=now - timedelta(hours=2),
     )
 
-    pause = shift.start_pause()
+    pause = shift.start_pause(now)
     time_provider.travel(now + timedelta(minutes=30))
-    shift.finish_pause()
+    shift.finish_pause(now + timedelta(minutes=30))
 
     assert shift.pull_events() == (
         PauseStartedEvent(
