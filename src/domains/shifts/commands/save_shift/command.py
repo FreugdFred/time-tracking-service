@@ -4,8 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
-
-
 class SaveShiftCommand(BaseModel):
     id: UUID
     reference_id: str | None = None
@@ -13,8 +11,8 @@ class SaveShiftCommand(BaseModel):
     started_at: datetime | None = None
     finished_at: datetime | None = None
 
-    automatically_closed: bool = False
-    approved: bool = False
+    automatically_closed: bool | None = None
+    approved: bool | None = None
 
     @property
     def is_time_set(self) -> bool:

@@ -25,8 +25,8 @@ class SaveShiftInput(BaseModel):
     started_at: UtcDateTimeInput | None = None
     finished_at: UtcDateTimeInput | None = None
 
-    automatically_closed: bool = False
-    approved: bool = False
+    automatically_closed: bool | None = None
+    approved: bool | None = None
 
     @model_validator(mode="after")
     def validate_shift(self) -> Self:

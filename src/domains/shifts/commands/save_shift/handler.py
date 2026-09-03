@@ -55,13 +55,13 @@ class SaveShiftCommandHandler(HandlerBase):
                 finished_at=command.finished_at,
             )
 
-        if "automatically_closed" in command.model_fields_set:
+        if command.automatically_closed is not None:
             shift.automatically_closed = command.automatically_closed
 
-        if "approved" in command.model_fields_set and command.approved:
+        if command.approved is True:
             shift.approve()
 
-        if "approved" in command.model_fields_set and not command.approved:
+        if command.approved is False:
             shift.disapprove()
 
         return shift
@@ -85,11 +85,4 @@ class SaveShiftCommandHandler(HandlerBase):
         assert command.started_at
         assert command.reference_id
 
-        return ShiftEntity(
-            id=command.id,
-            reference_id=command.reference_id,
-            started_at=command.started_at,
-            finished_at=command.finished_at,
-            automatically_closed=command.automatically_closed,
-            approved=command.approved,
-        )
+        return ShiftEntity.model_validate(command.model_dump(exclude_none=True))
