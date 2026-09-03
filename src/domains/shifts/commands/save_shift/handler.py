@@ -6,7 +6,7 @@ from src.core.handler_base import HandlerBase
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.commands.save_shift.command import SaveShiftCommand
 from src.domains.shifts.entity import ShiftEntity
-from src.exceptions import OverlappingException, ValidationException
+from src.exceptions import ValidationException
 
 
 class SaveShiftCommandHandler(HandlerBase):
@@ -22,18 +22,6 @@ class SaveShiftCommandHandler(HandlerBase):
         else:
             shift = self._create_entity(command)
             operation = "created"
-
-        if await self._shift_repository.has_overlap(shift):
-            logger.warning(
-                "Save shift command rejected due to overlap shift_id={}",
-                shift.id,
-            )
-            raise OverlappingException(
-                ShiftEntity,
-                identifier=str(shift.id),
-                start=shift.started_at,
-                end=shift.finished_at,
-            )
 
         shift_id = await self._shift_repository.save(shift)
         logger.info(

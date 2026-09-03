@@ -135,7 +135,7 @@ async def test_overlapping_shift_is_not_saved(
     assert await command_shift_repository.get(new_shift_id) is None
 
 
-async def test_updated_values_are_checked_for_overlap_before_save(
+async def test_updated_values_are_rejected_when_they_overlap(
     time_provider: FakeTimeProvider,
     command_shift_repository: CommandShiftRepository,
 ) -> None:

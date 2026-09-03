@@ -103,9 +103,8 @@ Adjacent ranges are valid; ranges with actual shared time overlap.
 - Eager-load relationships needed by the aggregate before leaving a session.
 - Keep sessions short-lived and commit only after domain validation succeeds.
 - Exclude the current record when checking overlap during an update.
-- `CommandShiftRepository.save` must recheck shift overlap using the same
-  session as the write. Do not remove the earlier handler check; it provides a
-  clearer early failure while the repository protects every save path.
+- `CommandShiftRepository.save` checks shift overlap using the same session as
+  the write so every save path has one consistent guard.
 - Treat `None` as an open-ended finish only where the domain supports an
   active shift or pause.
 - Prefer one transaction for a read-modify-write operation when concurrency
