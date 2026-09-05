@@ -31,4 +31,4 @@ RUN useradd --create-home --shell /bin/bash vscode \
 # Install Docker CLI, Buildx and Compose
 COPY --from=gloursdocker/docker / /
 
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
