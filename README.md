@@ -206,9 +206,9 @@ This endpoint is an upsert:
 - when `id` does not exist, it creates a completed historical shift;
 - when `id` exists, it updates that shift.
 
-On updates, `automatically_closed` and `approved` currently default to `false`
-when omitted. Include their intended values in every save request if either
-flag may already be `true`.
+When creating a shift, omitted `automatically_closed` and `approved` values
+default to `false`. When updating a shift, omitting either flag leaves its
+existing value unchanged. Send an explicit `false` to clear a flag.
 
 Creating a shift requires `id`, `reference_id`, `started_at`, and
 `finished_at`:
@@ -234,9 +234,7 @@ curl -X POST "http://localhost:8000/shift/save" \
   -H "Content-Type: application/json" \
   -d '{
     "id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d8",
-    "finished_at": "2026-09-03T17:00:00Z",
-    "automatically_closed": false,
-    "approved": false
+    "finished_at": "2026-09-03T17:00:00Z"
   }'
 ```
 
