@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator, validate_call
 
-from src.core.events import DomainEvent
+from messaging.entity import BaseDomainEvent
 from src.domains.pauses.entity import PauseEntity
 from src.domains.pauses.events import (
     PauseDeletedEvent,
@@ -67,7 +67,7 @@ def _empty_pauses() -> list[PauseEntity]:
 
 class ShiftEntity(Shift):
     pauses: list[PauseEntity] = Field(default_factory=_empty_pauses)
-    _events: list[DomainEvent] = PrivateAttr(default_factory=list)
+    _events: list[BaseDomainEvent] = PrivateAttr(default_factory=list)
 
     @classmethod
     def create(
@@ -116,7 +116,7 @@ class ShiftEntity(Shift):
         )
         return shift
 
-    def pull_events(self) -> tuple[DomainEvent, ...]:
+    def pull_events(self) -> tuple[BaseDomainEvent, ...]:
         events = tuple(self._events)
         self._events.clear()
         return events
@@ -514,5 +514,5 @@ class ShiftEntity(Shift):
             )
         )
 
-    def _record_event(self, event: DomainEvent) -> None:
+    def _record_event(self, event: BaseDomainEvent) -> None:
         self._events.append(event)

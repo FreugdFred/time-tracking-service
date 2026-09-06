@@ -3,18 +3,18 @@ from collections.abc import Iterable
 from dependency_container import Dependency
 from nats.aio.client import Client as NatsClient
 
-from src.core.events import DomainEvent
+from messaging.entity import BaseDomainEvent
 from src.core.settings import Settings
 
 
 class HandlerBase:
     @staticmethod
-    async def publish_events(events: Iterable[DomainEvent]) -> None:
+    async def publish_events(events: Iterable[BaseDomainEvent]) -> None:
         for event in events:
             await HandlerBase.publish_event(event)
 
     @staticmethod
-    async def publish_event(event: DomainEvent) -> None:
+    async def publish_event(event: BaseDomainEvent) -> None:
         settings = Dependency.get(Settings)
 
         if not settings.NATS_URL:
