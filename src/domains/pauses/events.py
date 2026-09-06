@@ -1,31 +1,31 @@
 from datetime import datetime
 from uuid import UUID
 
-from src.core.events import DomainEvent
+from messaging.entity import BaseDomainEvent
 
 
-class PauseEvent(DomainEvent):
+class PauseEventBase(BaseDomainEvent):
     shift_id: UUID
     pause_id: UUID
 
 
-class PauseStartedEvent(PauseEvent):
+class PauseStartedEvent(PauseEventBase):
     started_at: datetime
 
 
-class PauseFinishedEvent(PauseEvent):
+class PauseFinishedEvent(PauseEventBase):
     finished_at: datetime
 
 
-class PauseStartChangedEvent(PauseEvent):
+class PauseStartChangedEvent(PauseEventBase):
     previous_started_at: datetime
     started_at: datetime
 
 
-class PauseFinishChangedEvent(PauseEvent):
+class PauseFinishChangedEvent(PauseEventBase):
     previous_finished_at: datetime
     finished_at: datetime
 
 
-class PauseDeletedEvent(PauseEvent):
+class PauseDeletedEvent(PauseEventBase):
     pass
