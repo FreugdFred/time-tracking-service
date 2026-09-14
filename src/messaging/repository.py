@@ -1,3 +1,4 @@
+from typing import Iterable
 from uuid import UUID
 
 from dependency_container import Dependency
@@ -33,9 +34,12 @@ class MessagingRepository:
             await session.execute(query)
             await session.commit()
 
-    async def save(self, event: type[BaseDomainEvent]) -> None:
-        db_event = MessagingMapper.from_domain(event)
+    async def save_many(self, events: Iterable[BaseDomainEvent]) -> None:
+        db_events = [
+            MessagingMapper.from_domain(event)
+            for event in events
+        ]
 
         async with Dependency.get(AsyncSession) as session:
-            session.add(db_event)
-            await session.commit()
+            async with session.begin():
+                session.add_all(db_events)

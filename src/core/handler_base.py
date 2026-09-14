@@ -4,10 +4,17 @@ from dependency_container import Dependency
 from nats.aio.client import Client as NatsClient
 
 from messaging.entity import BaseDomainEvent
+from messaging.repository import MessagingRepository
 from src.core.settings import Settings
 
 
 class HandlerBase:
+    @staticmethod
+    async def save_events(events: Iterable[BaseDomainEvent]) -> None:
+        messaging_repository = Dependency.get(MessagingRepository)
+        await messaging_repository.save_many(events)
+
+
     @staticmethod
     async def publish_events(events: Iterable[BaseDomainEvent]) -> None:
         for event in events:
