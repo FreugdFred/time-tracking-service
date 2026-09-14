@@ -1,6 +1,7 @@
 from loguru import logger
 
 from src.core.handler_base import HandlerBase
+from src.core.unit_of_work import UnitOfWork
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.commands.remove_shift.command import RemoveShiftCommand
 
@@ -10,12 +11,17 @@ class RemoveShiftCommandHandler(HandlerBase):
         self._shift_repository = shift_repository
 
     async def handle(self, command: RemoveShiftCommand) -> None:
-        shift = await self._shift_repository.get(command.id)
-        if shift is None:
-            logger.debug("Remove shift command skipped; shift not found shift_id={}", command.id)
-            return
+        async with UnitOfWork() as session:
+            shift = await self._shift_repository.get(session, command.id)
+            if shift is None:
+                logger.debug(
+                    "Remove shift command skipped; shift not found shift_id={}",
+                    command.id,
+                )
+                return
 
-        shift.delete()
-        await self._shift_repository.remove(shift.id)
+            shift.delete()
+            await self._shift_repository.remove(session, shift.id)
+            await self.save_events(session, shift.pull_events())
+
         logger.info("Remove shift command completed shift_id={}", command.id)
-        await self.publish_events(shift.pull_events())

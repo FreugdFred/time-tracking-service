@@ -1,44 +1,17 @@
 from collections.abc import Iterable
 
 from dependency_container import Dependency
-from nats.aio.client import Client as NatsClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.messaging.command_repository import CommandMessagingRepository
 from src.messaging.entity import BaseDomainEvent
-from src.core.settings import Settings
-from src.core.unit_of_work import UnitOfWork
 
 
 class HandlerBase:
     @staticmethod
-    async def save_events(events: Iterable[BaseDomainEvent]) -> None:
-        messaging_repository = Dependency.get(CommandMessagingRepository)
-        async with UnitOfWork() as session:
-            await messaging_repository.save_many(session, events)
-
-    @staticmethod
-    async def publish_events(events: Iterable[BaseDomainEvent]) -> None:
-        for event in events:
-            await HandlerBase.publish_event(event)
-
-    @staticmethod
-    async def publish_event(event: BaseDomainEvent) -> None:
-        settings = Dependency.get(Settings)
-
-        if not settings.NATS_URL:
-            return None
-
-        nats_client = HandlerBase.get_nats_client()
-        await nats_client.publish(
-            subject=f"{settings.PROJECT_NAME}.{type(event).__name__}",
-            payload=event.model_dump_json().encode("utf-8"),
-        )
-
-    @staticmethod
-    def get_nats_client() -> NatsClient:
-        nats_client = Dependency.get(NatsClient)
-
-        if not nats_client.is_connected:
-            raise RuntimeError("NATS client is not connected")
-
-        return nats_client
+    async def save_events(
+        session: AsyncSession,
+        events: Iterable[BaseDomainEvent],
+    ) -> None:
+        repository = Dependency.get(CommandMessagingRepository)
+        await repository.save_many(session, events)

@@ -1,8 +1,10 @@
 from uuid import UUID
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.handler_base import HandlerBase
+from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.commands.save_pause.command import SavePauseCommand
 from src.domains.pauses.entity import PauseEntity
 from src.domains.shifts.command_repository import CommandShiftRepository
@@ -15,26 +17,32 @@ class SavePauseCommandHandler(HandlerBase):
         self._shift_repository = shift_repository
 
     async def handle(self, command: SavePauseCommand) -> UUID:
-        shift = await self._shift_repository.get_by_pause_id(command.id)
+        async with UnitOfWork() as session:
+            shift = await self._shift_repository.get_by_pause_id(session, command.id)
 
-        if shift is None:
-            shift = await self._create_pause(command)
-            operation = "created"
-        else:
-            self._update_pause(shift, command)
-            operation = "updated"
+            if shift is None:
+                shift = await self._create_pause(session, command)
+                operation = "created"
+            else:
+                self._update_pause(shift, command)
+                operation = "updated"
 
-        await self._shift_repository.save(shift)
+            await self._shift_repository.save(session, shift)
+            await self.save_events(session, shift.pull_events())
+
         logger.info(
             "Save pause command completed operation={} pause_id={} shift_id={}",
             operation,
             command.id,
             shift.id,
         )
-        await self.publish_events(shift.pull_events())
         return command.id
 
-    async def _create_pause(self, command: SavePauseCommand) -> ShiftEntity:
+    async def _create_pause(
+        self,
+        session: AsyncSession,
+        command: SavePauseCommand,
+    ) -> ShiftEntity:
         required_fields = {
             "shift_id": command.shift_id,
             "started_at": command.started_at,
@@ -53,11 +61,10 @@ class SavePauseCommandHandler(HandlerBase):
         assert command.started_at is not None
         assert command.finished_at is not None
 
-        shift = await self._shift_repository.get(command.shift_id)
+        shift = await self._shift_repository.get(session, command.shift_id)
         if shift is None:
             logger.warning(
-                "Save pause command rejected; shift not found "
-                "pause_id={} shift_id={}",
+                "Save pause command rejected; shift not found pause_id={} shift_id={}",
                 command.id,
                 command.shift_id,
             )
@@ -86,9 +93,7 @@ class SavePauseCommandHandler(HandlerBase):
             raise UnfinishedException(PauseEntity, str(pause.id))
 
         started_at = (
-            command.started_at
-            if command.started_at is not None
-            else pause.started_at
+            command.started_at if command.started_at is not None else pause.started_at
         )
         finished_at = (
             command.finished_at

@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from dependency_container import Dependency
+from src.core.unit_of_work import UnitOfWork
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.domains.shifts.queries.get_shifts_in_date_range.handler import (
@@ -27,8 +28,10 @@ async def test_applies_filters_sorting_and_pagination(
         reference_id="employee-2",
         started_at=datetime(2026, 9, 2, 9, tzinfo=UTC),
     )
-    await command_shift_repository.save(matching_shift)
-    await command_shift_repository.save(excluded_shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, matching_shift)
+        await command_shift_repository.save(session, excluded_shift)
+
     start = datetime(2026, 9, 1, tzinfo=UTC)
     end = datetime(2026, 9, 3, tzinfo=UTC)
     query = GetShiftsInDateRangeQuery(

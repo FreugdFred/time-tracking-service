@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from dependency_container import Dependency
+from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.commands.remove_pause.command import RemovePauseCommand
 from src.domains.pauses.commands.remove_pause.handler import RemovePauseCommandHandler
 from src.domains.pauses.entity import PauseEntity
@@ -19,7 +20,9 @@ async def test_remove_missing_pause_is_successful_no_op(
         RemovePauseCommand(id=pause_id)
     )
 
-    assert await command_shift_repository.get_by_pause_id(pause_id) is None
+    async with UnitOfWork() as session:
+        shift = await command_shift_repository.get_by_pause_id(session, pause_id)
+    assert shift is None
 
 
 async def test_remove_deletes_pause_through_its_shift(
@@ -38,12 +41,15 @@ async def test_remove_deletes_pause_through_its_shift(
         finished_at=datetime(2026, 9, 1, 17, tzinfo=UTC),
         pauses=[pause],
     )
-    await command_shift_repository.save(shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, shift)
 
     await Dependency.get(RemovePauseCommandHandler).handle(
         RemovePauseCommand(id=pause.id)
     )
 
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
+
     assert saved_shift is not None
     assert saved_shift.pauses == []

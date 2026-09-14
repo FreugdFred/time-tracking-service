@@ -3,6 +3,7 @@ from uuid import UUID
 from loguru import logger
 
 from src.core.handler_base import HandlerBase
+from src.core.unit_of_work import UnitOfWork
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.commands.save_shift.command import SaveShiftCommand
 from src.domains.shifts.entity import ShiftEntity
@@ -14,22 +15,24 @@ class SaveShiftCommandHandler(HandlerBase):
         self._shift_repository = shift_repository
 
     async def handle(self, command: SaveShiftCommand) -> UUID:
-        existing_shift = await self._shift_repository.get(command.id)
+        async with UnitOfWork() as session:
+            existing_shift = await self._shift_repository.get(session, command.id)
 
-        if existing_shift is not None:
-            shift = self._update_entity(existing_shift, command)
-            operation = "updated"
-        else:
-            shift = self._create_entity(command)
-            operation = "created"
+            if existing_shift is not None:
+                shift = self._update_entity(existing_shift, command)
+                operation = "updated"
+            else:
+                shift = self._create_entity(command)
+                operation = "created"
 
-        shift_id = await self._shift_repository.save(shift)
+            shift_id = await self._shift_repository.save(session, shift)
+            await self.save_events(session, shift.pull_events())
+
         logger.info(
             "Save shift command completed operation={} shift_id={}",
             operation,
             shift_id,
         )
-        await self.publish_events(shift.pull_events())
         return shift_id
 
     @staticmethod
@@ -61,9 +64,7 @@ class SaveShiftCommandHandler(HandlerBase):
             "started_at": command.started_at,
             "finished_at": command.finished_at,
         }
-        missing_fields = [
-            name for name, value in required_fields.items() if not value
-        ]
+        missing_fields = [name for name, value in required_fields.items() if not value]
         if missing_fields:
             raise ValidationException(
                 f"Cannot create shift {command.id}: missing required fields: "

@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from dependency_container import Dependency
+from src.core.unit_of_work import UnitOfWork
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.commands.save_shift.command import SaveShiftCommand
 from src.domains.shifts.commands.save_shift.handler import SaveShiftCommandHandler
@@ -22,7 +23,10 @@ async def test_create_requires_complete_shift(
             SaveShiftCommand(id=shift_id, reference_id="employee-1")
         )
 
-    assert await command_shift_repository.get(shift_id) is None
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift_id)
+
+    assert saved_shift is None
 
 
 async def test_create_persists_complete_shift(
@@ -40,7 +44,8 @@ async def test_create_persists_complete_shift(
         )
     )
 
-    saved_shift = await command_shift_repository.get(shift_id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift_id)
     assert saved_shift is not None
     assert result == shift_id
     assert saved_shift.id == shift_id
@@ -57,7 +62,8 @@ async def test_update_applies_complete_time_range_atomically(
         started_at=datetime(2026, 9, 2, 8, tzinfo=UTC),
         finished_at=datetime(2026, 9, 2, 10, tzinfo=UTC),
     )
-    await command_shift_repository.save(shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, shift)
 
     await Dependency.get(SaveShiftCommandHandler).handle(
         SaveShiftCommand(
@@ -69,7 +75,9 @@ async def test_update_applies_complete_time_range_atomically(
         )
     )
 
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
+
     assert saved_shift is not None
     assert saved_shift.started_at == datetime(2026, 9, 2, 11, tzinfo=UTC)
     assert saved_shift.finished_at == datetime(2026, 9, 2, 12, tzinfo=UTC)
@@ -87,12 +95,15 @@ async def test_update_distinguishes_omitted_booleans_from_false(
         approved=True,
         automatically_closed=True,
     )
-    await command_shift_repository.save(shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, shift)
     handler = Dependency.get(SaveShiftCommandHandler)
 
     await handler.handle(SaveShiftCommand(id=shift.id))
 
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
+
     assert saved_shift is not None
     assert saved_shift.approved
     assert saved_shift.automatically_closed
@@ -105,7 +116,9 @@ async def test_update_distinguishes_omitted_booleans_from_false(
         )
     )
 
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
+
     assert saved_shift is not None
     assert not saved_shift.approved
     assert not saved_shift.automatically_closed
@@ -119,7 +132,9 @@ async def test_overlapping_shift_is_not_saved(
         started_at=datetime(2026, 9, 1, 8, tzinfo=UTC),
         finished_at=datetime(2026, 9, 1, 10, tzinfo=UTC),
     )
-    await command_shift_repository.save(existing_shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, existing_shift)
+
     new_shift_id = uuid4()
 
     with pytest.raises(OverlappingException):
@@ -132,7 +147,10 @@ async def test_overlapping_shift_is_not_saved(
             )
         )
 
-    assert await command_shift_repository.get(new_shift_id) is None
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, new_shift_id)
+
+    assert saved_shift is None
 
 
 async def test_updated_values_are_rejected_when_they_overlap(
@@ -150,8 +168,9 @@ async def test_updated_values_are_rejected_when_they_overlap(
         started_at=datetime(2026, 9, 1, 6, tzinfo=UTC),
         finished_at=datetime(2026, 9, 1, 7, tzinfo=UTC),
     )
-    await command_shift_repository.save(adjacent_shift)
-    await command_shift_repository.save(shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, adjacent_shift)
+        await command_shift_repository.save(session, shift)
 
     with pytest.raises(OverlappingException):
         await Dependency.get(SaveShiftCommandHandler).handle(
@@ -161,6 +180,8 @@ async def test_updated_values_are_rejected_when_they_overlap(
             )
         )
 
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
+
     assert saved_shift is not None
     assert saved_shift.started_at == datetime(2026, 9, 1, 8, tzinfo=UTC)

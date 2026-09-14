@@ -16,6 +16,8 @@ from src.domains.pauses.query_repository import QueryPauseRepository
 from src.domains.shifts.command_repository import CommandShiftRepository
 from src.domains.shifts.di import include_shift_dependencies
 from src.domains.shifts.query_repository import QueryShiftRepository
+from src.messaging.di import include_messaging_dependencies
+from src.messaging.query_repository import QueryMessagingRepository
 from time_provider import AbstractTimeProvider, FakeTimeProvider
 
 DEFAULT_NOW = datetime(2026, 9, 2, 12, tzinfo=UTC)
@@ -40,6 +42,7 @@ def configure_dependencies(tmp_path: Path) -> Iterator[None]:
     include_core_dependencies(settings)
     include_shift_dependencies()
     include_pause_dependencies()
+    include_messaging_dependencies()
     Dependency.overwrite(
         AbstractTimeProvider,
         FakeTimeProvider(
@@ -77,3 +80,8 @@ def query_shift_repository() -> QueryShiftRepository:
 @pytest.fixture
 def query_pause_repository() -> QueryPauseRepository:
     return Dependency.get(QueryPauseRepository)
+
+
+@pytest.fixture
+def query_messaging_repository() -> QueryMessagingRepository:
+    return Dependency.get(QueryMessagingRepository)
