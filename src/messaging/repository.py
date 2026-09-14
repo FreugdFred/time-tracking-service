@@ -33,8 +33,8 @@ class MessagingRepository:
             await session.execute(query)
             await session.commit()
 
-    async def save(self, event: BaseDomainEvent) -> None:
-        db_event = MessagingMapper.from_domain(event)  # pyright: ignore[reportArgumentType]
+    async def save(self, event: type[BaseDomainEvent]) -> None:
+        db_event = MessagingMapper.from_domain(event)
 
         async with Dependency.get(AsyncSession) as session:
             session.add(db_event)

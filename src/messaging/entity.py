@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from utils import get_now
+from src.utils import get_now
 
 
 class BaseDomainEvent(BaseModel):
