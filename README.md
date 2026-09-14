@@ -423,8 +423,8 @@ validation-error structure.
 ## NATS events
 
 When `NATS_URL` is configured, successful command handlers publish domain
-events after persistence. When it is unset, commands still work but publish no
-events.
+events after persistence. When it is unset, commands still work but domain
+events are neither stored in the outbox nor published.
 
 Subjects use this format:
 

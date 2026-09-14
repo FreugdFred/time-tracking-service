@@ -2,6 +2,8 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from dependency_container import Dependency
+from pydantic import NatsDsn
+from src.core.settings import Settings
 from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.entity import PauseEntity
 from src.domains.shifts.command_repository import CommandShiftRepository
@@ -20,6 +22,8 @@ async def test_starts_shift_when_none_is_active(
     command_shift_repository: CommandShiftRepository,
     query_messaging_repository: QueryMessagingRepository,
 ) -> None:
+    settings = Dependency.get(Settings)
+    settings.NATS_URL = NatsDsn("nats://localhost:4222")
     time_provider.travel(NOW)
     handler = Dependency.get(ClockShiftCommandHandler)
 
@@ -39,6 +43,19 @@ async def test_starts_shift_when_none_is_active(
         ("ShiftCreatedEvent", "employee-1"),
         ("ShiftStartedEvent", "employee-1"),
     }
+
+
+async def test_does_not_store_events_when_nats_is_not_configured(
+    time_provider: FakeTimeProvider,
+    query_messaging_repository: QueryMessagingRepository,
+) -> None:
+    time_provider.travel(NOW)
+
+    await Dependency.get(ClockShiftCommandHandler).handle(
+        ClockShiftCommand(reference_id="employee-1")
+    )
+
+    assert await query_messaging_repository.list_unpublished() == []
 
 
 async def test_finishes_active_shift_and_pause(
