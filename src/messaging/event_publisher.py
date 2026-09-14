@@ -15,9 +15,6 @@ class EventPublisher:
         settings: Settings,
         nats_client: NatsClient,
     ) -> None:
-        if not nats_client.is_connected:
-            raise RuntimeError("NATS client is not connected")
-
         self.command_repository = command_repository
         self.query_repository = query_repository
         self.settings = settings
@@ -34,5 +31,5 @@ class EventPublisher:
             await self.command_repository.set_publish(session, event.id)
             await self.nats_client.publish(
                 subject=f"{self.settings.PROJECT_NAME}.{event.type}",
-                payload=event.model_dump_json().encode("utf-8"),
+                payload=event.model_dump_json().encode(),
             )
