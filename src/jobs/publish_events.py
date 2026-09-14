@@ -1,5 +1,5 @@
 from dependency_container import Dependency
-from messaging.event_publisher import EventPublisher
+from src.messaging.event_publisher import EventPublisher
 
 
 async def publish_events() -> None:

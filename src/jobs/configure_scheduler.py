@@ -1,6 +1,6 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from jobs.publish_events import publish_events
+from src.jobs.publish_events import publish_events
 from src.jobs.close_open_shifts import close_open_shifts
 
 

@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator, validate_call
 
-from messaging.entity import BaseDomainEvent
+from src.messaging.entity import BaseDomainEvent
 from src.domains.pauses.entity import PauseEntity
 from src.domains.pauses.events import (
     PauseDeletedEvent,

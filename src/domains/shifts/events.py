@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from messaging.entity import BaseDomainEvent
+from src.messaging.entity import BaseDomainEvent
 
 
 class ShiftEventBase(BaseDomainEvent):

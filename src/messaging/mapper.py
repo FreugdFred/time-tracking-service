@@ -1,10 +1,10 @@
-from messaging.entity import BaseDomainEvent, EventEnvelope
-from messaging.models import DbEvent
+from src.messaging.entity import BaseDomainEvent, EventEnvelope
+from src.messaging.models import DbEvent
 
 
 class MessagingMapper:
     @classmethod
-    def from_domain(cls, event: type[BaseDomainEvent]) -> DbEvent:
+    def from_domain(cls, event: BaseDomainEvent) -> DbEvent:
         data = event.model_dump(exclude={"reference_id", "occurrence_datetime"})
         event_type = type(event).__name__
 
