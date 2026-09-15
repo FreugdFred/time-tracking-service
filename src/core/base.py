@@ -13,6 +13,8 @@ class Base(DeclarativeBase):
 
 def import_all_database_models() -> None:
     """Import domain database models into the shared SQLAlchemy metadata."""
+    import src.messaging.models
+
     for _, name, _ in pkgutil.iter_modules(src.domains.__path__):
         module_path = f"src.domains.{name}.models"
         if importlib.util.find_spec(module_path) is not None:

@@ -7,7 +7,7 @@ from src.domains.shifts.query_models import (
     PaginatedQueryModel,
     ShiftByReferenceIdQueryModel,
 )
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 
 class GetShiftsByReferenceIdQueryHandler:
     def __init__(self, repository: QueryShiftRepository):

@@ -4,14 +4,15 @@ from uuid import uuid4
 import pytest
 
 from dependency_container import Dependency
-from src.domains.shifts.command_repository import CommandShiftRepository
+from src.core.unit_of_work import UnitOfWork
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.domains.shifts.queries.get_shift_by_id.handler import (
     GetShiftByIdQueryHandler,
 )
 from src.domains.shifts.queries.get_shift_by_id.query import GetShiftByIdQuery
 from src.domains.shifts.query_models import ShiftQueryModel
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 from src.exceptions import NotFoundException
 
 
@@ -27,7 +28,8 @@ async def test_returns_shift_projection(
         automatically_closed=False,
         approved=True,
     )
-    await command_shift_repository.save(shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, shift)
 
     result = await Dependency.get(GetShiftByIdQueryHandler).handle(
         GetShiftByIdQuery(id=shift.id)

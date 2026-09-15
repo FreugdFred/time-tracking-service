@@ -2,7 +2,7 @@ from loguru import logger
 
 from src.domains.shifts.queries.get_shift_by_id.query import GetShiftByIdQuery
 from src.domains.shifts.query_models import ShiftQueryModel
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 from src.exceptions import NotFoundException
 
 class GetShiftByIdQueryHandler:

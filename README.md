@@ -423,8 +423,8 @@ validation-error structure.
 ## NATS events
 
 When `NATS_URL` is configured, successful command handlers publish domain
-events after persistence. When it is unset, commands still work but publish no
-events.
+events after persistence. When it is unset, commands still work but domain
+events are neither stored in the outbox nor published.
 
 Subjects use this format:
 
@@ -484,6 +484,11 @@ Events are currently published through Core NATS. The service does not create
 a JetStream stream or durable consumer; consumers that require persistence or
 replay must configure that infrastructure separately.
 
+Published event outbox rows are retained for `EVENT_RETENTION_MINUTES` after
+their `published_at` timestamp. A cleanup job runs once per minute and removes
+rows whose retention period has elapsed. Unpublished rows are never removed by
+this job.
+
 ## Configuration
 
 | Variable | Required | Default | Description |
@@ -494,6 +499,7 @@ replay must configure that infrastructure separately.
 | `PROJECT_NAME` | No | `Time-Tracking-Service-API` | API title and NATS subject prefix. |
 | `LOCAL_TIMEZONE` | No | `Europe/Amsterdam` | Timezone assumed for API timestamps that omit an offset. |
 | `SHIFT_AUTO_CLOSE_AFTER_HOURS` | No | `12` | Age after which the scheduler closes active shifts. |
+| `EVENT_RETENTION_MINUTES` | No | `10` | Minutes to retain published event outbox rows before scheduled cleanup. |
 | `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. |
 | `DEBUG` | No | `false` | Enables FastAPI debug mode. |
 

@@ -4,9 +4,10 @@ from uuid import uuid4
 import pytest
 
 from dependency_container import Dependency
+from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.commands.clock_pause.command import ClockPauseCommand
 from src.domains.pauses.commands.clock_pause.handler import ClockPauseCommandHandler
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.exceptions import NotFoundException
 from time_provider import FakeTimeProvider
@@ -25,12 +26,14 @@ async def test_starts_and_then_finishes_active_pause(
         reference_id="employee-1",
         started_at=datetime(2026, 9, 1, 8, tzinfo=UTC),
     )
-    await command_shift_repository.save(shift)
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, shift)
     handler = Dependency.get(ClockPauseCommandHandler)
 
     pause_id = await handler.handle(ClockPauseCommand(reference_id=shift.reference_id))
 
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
     assert saved_shift is not None
     active_pause = saved_shift.active_pause
     assert active_pause is not None
@@ -43,7 +46,8 @@ async def test_starts_and_then_finishes_active_pause(
     )
 
     assert finished_pause_id == pause_id
-    saved_shift = await command_shift_repository.get(shift.id)
+    async with UnitOfWork() as session:
+        saved_shift = await command_shift_repository.get(session, shift.id)
     assert saved_shift is not None
     assert saved_shift.active_pause is None
     assert saved_shift.get_pause(pause_id).finished_at == datetime(
@@ -66,4 +70,9 @@ async def test_requires_active_shift_for_reference(
         "Cannot clock a pause because no active shift was found for reference "
         "'employee-1'. Start a shift first."
     )
-    assert await command_shift_repository.get_active("employee-1") is None
+    async with UnitOfWork() as session:
+        active_shift = await command_shift_repository.get_active(
+            session,
+            "employee-1",
+        )
+    assert active_shift is None

@@ -102,6 +102,12 @@ Adjacent ranges are valid; ranges with actual shared time overlap.
 - Use mappers when moving between database models and domain entities.
 - Eager-load relationships needed by the aggregate before leaving a session.
 - Keep sessions short-lived and commit only after domain validation succeeds.
+- Query repository methods obtain their own short-lived `AsyncSession` from
+  `Dependency` and close it after the read completes.
+- Command repository methods receive an `AsyncSession` from their caller. They
+  must not resolve sessions or commit, roll back, or close transactions.
+- Command callers use `UnitOfWork` to create the session and own the transaction
+  boundary, including commit, rollback, and close behavior.
 - Exclude the current record when checking overlap during an update.
 - `CommandShiftRepository.save` checks shift overlap using the same session as
   the write so every save path has one consistent guard.

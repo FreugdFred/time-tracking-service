@@ -4,14 +4,15 @@ from uuid import uuid4
 import pytest
 
 from dependency_container import Dependency
+from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.entity import PauseEntity
 from src.domains.pauses.queries.get_pause_by_id.handler import (
     GetPauseByIdQueryHandler,
 )
 from src.domains.pauses.queries.get_pause_by_id.query import GetPauseByIdQuery
 from src.domains.pauses.query_models import PauseQueryModel
-from src.domains.pauses.query_repository import QueryPauseRepository
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.pauses.queries.repository import QueryPauseRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.exceptions import NotFoundException
 
@@ -32,7 +33,9 @@ async def test_returns_pause_with_shift_id(
         finished_at=datetime(2026, 9, 1, 17, tzinfo=UTC),
         pauses=[pause],
     )
-    await command_shift_repository.save(shift)
+
+    async with UnitOfWork() as session:
+        await command_shift_repository.save(session, shift)
 
     result = await Dependency.get(GetPauseByIdQueryHandler).handle(
         GetPauseByIdQuery(id=pause.id)
