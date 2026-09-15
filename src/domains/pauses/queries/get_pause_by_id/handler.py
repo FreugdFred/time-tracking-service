@@ -2,7 +2,7 @@ from loguru import logger
 
 from src.domains.pauses.queries.get_pause_by_id.query import GetPauseByIdQuery
 from src.domains.pauses.query_models import PauseQueryModel
-from src.domains.pauses.query_repository import QueryPauseRepository
+from domains.pauses.queries.repository import QueryPauseRepository
 from src.exceptions import NotFoundException
 
 class GetPauseByIdQueryHandler:

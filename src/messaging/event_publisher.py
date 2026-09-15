@@ -2,9 +2,9 @@ from nats.aio.client import Client as NatsClient
 
 from src.core.settings import Settings
 from src.core.unit_of_work import UnitOfWork
-from src.messaging.command_repository import CommandMessagingRepository
+from messaging.commands.repository import CommandMessagingRepository
 from src.messaging.entity import EventEnvelope
-from src.messaging.query_repository import QueryMessagingRepository
+from messaging.queries.repository import QueryMessagingRepository
 
 
 class EventPublisher:

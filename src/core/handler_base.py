@@ -4,7 +4,7 @@ from dependency_container import Dependency
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.settings import Settings
-from src.messaging.command_repository import CommandMessagingRepository
+from messaging.commands.repository import CommandMessagingRepository
 from src.messaging.entity import BaseDomainEvent
 
 

@@ -6,11 +6,11 @@ from pydantic import NatsDsn
 from src.core.settings import Settings
 from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.entity import PauseEntity
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.commands.clock_shift.command import ClockShiftCommand
 from src.domains.shifts.commands.clock_shift.handler import ClockShiftCommandHandler
 from src.domains.shifts.entity import ShiftEntity
-from src.messaging.query_repository import QueryMessagingRepository
+from messaging.queries.repository import QueryMessagingRepository
 from time_provider import FakeTimeProvider
 
 

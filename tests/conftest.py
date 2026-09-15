@@ -12,12 +12,12 @@ from src.core.base import Base, import_all_database_models
 from src.core.di import include_core_dependencies
 from src.core.settings import Settings
 from src.domains.pauses.di import include_pause_dependencies
-from src.domains.pauses.query_repository import QueryPauseRepository
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.pauses.queries.repository import QueryPauseRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.di import include_shift_dependencies
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 from src.messaging.di import include_messaging_dependencies
-from src.messaging.query_repository import QueryMessagingRepository
+from messaging.queries.repository import QueryMessagingRepository
 from time_provider import AbstractTimeProvider, FakeTimeProvider
 
 DEFAULT_NOW = datetime(2026, 9, 2, 12, tzinfo=UTC)

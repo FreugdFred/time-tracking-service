@@ -1,5 +1,5 @@
 from dependency_container import Dependency
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.commands.close_open_shifts.handler import (
     CloseOpenShiftsCommandHandler,
 )
@@ -13,7 +13,7 @@ from src.domains.shifts.queries.get_shifts_by_reference_id.handler import (
 from src.domains.shifts.queries.get_shifts_in_date_range.handler import (
     GetShiftsInDateRangeQueryHandler,
 )
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 
 
 def include_shift_dependencies() -> None:

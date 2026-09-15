@@ -3,7 +3,7 @@ from loguru import logger
 from src.core.handler_base import HandlerBase
 from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.commands.remove_pause.command import RemovePauseCommand
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 
 
 class RemovePauseCommandHandler(HandlerBase):

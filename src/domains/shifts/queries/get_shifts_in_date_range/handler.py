@@ -4,7 +4,7 @@ from src.domains.shifts.queries.get_shifts_in_date_range.query import (
     GetShiftsInDateRangeQuery,
 )
 from src.domains.shifts.query_models import PaginatedQueryModel, ShiftQueryModel
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 
 class GetShiftsInDateRangeQueryHandler:
     def __init__(self, repository: QueryShiftRepository):

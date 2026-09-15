@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.core.unit_of_work import UnitOfWork
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.domains.pauses.routes import pause_router
 from src.exception_handlers import register_exception_handlers

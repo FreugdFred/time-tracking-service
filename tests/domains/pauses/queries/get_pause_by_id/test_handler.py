@@ -11,8 +11,8 @@ from src.domains.pauses.queries.get_pause_by_id.handler import (
 )
 from src.domains.pauses.queries.get_pause_by_id.query import GetPauseByIdQuery
 from src.domains.pauses.query_models import PauseQueryModel
-from src.domains.pauses.query_repository import QueryPauseRepository
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.pauses.queries.repository import QueryPauseRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.exceptions import NotFoundException
 

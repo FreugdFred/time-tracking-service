@@ -1,11 +1,11 @@
 from dependency_container import Dependency
 
-from src.messaging.command_repository import CommandMessagingRepository
+from messaging.commands.repository import CommandMessagingRepository
 from src.messaging.commands.remove_published_events.handler import (
     RemovePublishedEventsCommandHandler,
 )
 from src.messaging.event_publisher import EventPublisher
-from src.messaging.query_repository import QueryMessagingRepository
+from messaging.queries.repository import QueryMessagingRepository
 
 
 def include_messaging_dependencies() -> None:

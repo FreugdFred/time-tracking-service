@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from dependency_container import Dependency
 from src.core.unit_of_work import UnitOfWork
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.domains.shifts.queries.get_shifts_by_reference_id.handler import (
     GetShiftsByReferenceIdQueryHandler,
@@ -11,7 +11,7 @@ from src.domains.shifts.queries.get_shifts_by_reference_id.query import (
     GetShiftsByReferenceIdQuery,
 )
 from src.domains.shifts.query_models import ShiftByReferenceIdQueryModel
-from src.domains.shifts.query_repository import QueryShiftRepository
+from domains.shifts.queries.repository import QueryShiftRepository
 
 
 async def test_applies_filters_sorting_and_pagination(

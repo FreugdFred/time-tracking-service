@@ -4,7 +4,7 @@ from loguru import logger
 
 from src.core.handler_base import HandlerBase
 from src.core.unit_of_work import UnitOfWork
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.commands.close_open_shifts.command import (
     CloseOpenShiftsCommand,
 )

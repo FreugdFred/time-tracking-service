@@ -6,7 +6,7 @@ from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.commands.remove_pause.command import RemovePauseCommand
 from src.domains.pauses.commands.remove_pause.handler import RemovePauseCommandHandler
 from src.domains.pauses.entity import PauseEntity
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from time_provider import FakeTimeProvider
 

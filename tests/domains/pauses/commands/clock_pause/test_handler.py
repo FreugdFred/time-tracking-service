@@ -7,7 +7,7 @@ from dependency_container import Dependency
 from src.core.unit_of_work import UnitOfWork
 from src.domains.pauses.commands.clock_pause.command import ClockPauseCommand
 from src.domains.pauses.commands.clock_pause.handler import ClockPauseCommandHandler
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.entity import ShiftEntity
 from src.exceptions import NotFoundException
 from time_provider import FakeTimeProvider

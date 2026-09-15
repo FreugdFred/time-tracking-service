@@ -4,7 +4,7 @@ from time_provider import AbstractTimeProvider
 
 from src.core.handler_base import HandlerBase
 from src.core.unit_of_work import UnitOfWork
-from src.messaging.command_repository import CommandMessagingRepository
+from messaging.commands.repository import CommandMessagingRepository
 from src.messaging.commands.remove_published_events.command import (
     RemovePublishedEventsCommand,
 )

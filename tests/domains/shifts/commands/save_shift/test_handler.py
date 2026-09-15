@@ -5,7 +5,7 @@ import pytest
 
 from dependency_container import Dependency
 from src.core.unit_of_work import UnitOfWork
-from src.domains.shifts.command_repository import CommandShiftRepository
+from domains.shifts.commands.repository import CommandShiftRepository
 from src.domains.shifts.commands.save_shift.command import SaveShiftCommand
 from src.domains.shifts.commands.save_shift.handler import SaveShiftCommandHandler
 from src.domains.shifts.entity import ShiftEntity
