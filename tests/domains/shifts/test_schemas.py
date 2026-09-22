@@ -1,7 +1,20 @@
 from datetime import UTC, datetime, timedelta, timezone
 from uuid import uuid4
 
+import pytest
+from pydantic import ValidationError
+
 from src.domains.shifts.schemas import DateRangeInput, SaveShiftInput
+
+
+def test_reference_id_accepts_255_characters() -> None:
+    value = "é" * 255
+    assert SaveShiftInput(id=uuid4(), reference_id=value).reference_id == value
+
+
+def test_reference_id_rejects_256_characters() -> None:
+    with pytest.raises(ValidationError, match="255"):
+        SaveShiftInput(id=uuid4(), reference_id="x" * 256)
 
 
 def test_save_shift_input_defaults_upsert_booleans_to_none() -> None:

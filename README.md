@@ -94,8 +94,8 @@ The health endpoint remains available without an API key.
 ### Reference IDs
 
 `reference_id` is an opaque string controlled by the API consumer. It is
-commonly an employee ID, but the service does not interpret or validate its
-format.
+commonly an employee ID. It must be at most 255 characters; longer inputs return
+HTTP 422. The service does not otherwise interpret its format.
 
 ### Timestamps
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import AfterValidator
+from pydantic import AfterValidator, StringConstraints
 
 from dependency_container import Dependency
 from time_provider import AbstractTimeProvider
@@ -12,3 +12,4 @@ def normalize_to_utc(value: datetime) -> datetime:
 
 
 UtcDateTimeInput = Annotated[datetime, AfterValidator(normalize_to_utc)]
+ReferenceId = Annotated[str, StringConstraints(max_length=255)]

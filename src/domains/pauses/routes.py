@@ -2,6 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
+from src.core.schema_types import ReferenceId
+
 from dependency_container import Dependency
 from src.domains.pauses.commands.clock_pause.command import ClockPauseCommand
 from src.domains.pauses.commands.clock_pause.handler import ClockPauseCommandHandler
@@ -20,7 +22,7 @@ pause_router = APIRouter(prefix="/pause", tags=["pause"])
 
 
 @pause_router.post("/clock")
-async def clock_pause(reference_id: str) -> UUID:
+async def clock_pause(reference_id: ReferenceId) -> UUID:
     handler = Dependency.get(ClockPauseCommandHandler)
     return await handler.handle(ClockPauseCommand(reference_id=reference_id))
 

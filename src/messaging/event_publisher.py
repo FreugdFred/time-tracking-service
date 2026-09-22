@@ -33,3 +33,4 @@ class EventPublisher:
                 subject=f"{self.settings.PROJECT_NAME}.{event.type}",
                 payload=event.model_dump_json().encode("utf-8"),
             )
+            await self.nats_client.flush()

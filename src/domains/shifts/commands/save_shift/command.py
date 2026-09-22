@@ -4,9 +4,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from src.core.schema_types import ReferenceId
+
 class SaveShiftCommand(BaseModel):
     id: UUID
-    reference_id: str | None = None
+    reference_id: ReferenceId | None = None
 
     started_at: datetime | None = None
     finished_at: datetime | None = None

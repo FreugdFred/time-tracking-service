@@ -1,4 +1,5 @@
 import json
+import pytest
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -75,3 +76,32 @@ async def test_publishes_event_envelope() -> None:
         },
     }
     assert await query_repository.list_unpublished() == []
+    assert nats_client.confirmed_messages == nats_client.messages
+
+
+async def test_failed_confirmation_keeps_event_available_for_retry() -> None:
+    command_repository = Dependency.get(CommandMessagingRepository)
+    query_repository = Dependency.get(QueryMessagingRepository)
+    async with UnitOfWork() as session:
+        await command_repository.save_many(
+            session, [BaseDomainEvent(reference_id="employee-1")]
+        )
+    events = await query_repository.list_unpublished()
+    nats_client = RecordingNatsClient()
+    nats_client.flush_error = TimeoutError("No confirmation")
+    publisher = EventPublisher(
+        command_repository, query_repository, Dependency.get(Settings), nats_client
+    )
+
+    with pytest.raises(TimeoutError, match="No confirmation"):
+        await publisher.publish()
+
+    pending = await query_repository.list_unpublished()
+    assert [event.id for event in pending] == [event.id for event in events]
+    assert nats_client.confirmed_messages == []
+
+    nats_client.flush_error = None
+    await publisher.publish()
+    assert await query_repository.list_unpublished() == []
+    assert len(nats_client.messages) == 2
+    assert nats_client.messages[0] == nats_client.messages[1]

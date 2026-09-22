@@ -3,6 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
+from src.core.schema_types import ReferenceId
+
 from dependency_container import Dependency
 from src.domains.shifts.commands.clock_shift.command import ClockShiftCommand
 from src.domains.shifts.commands.clock_shift.handler import ClockShiftCommandHandler
@@ -40,7 +42,7 @@ shift_router = APIRouter(prefix="/shift", tags=["shift"])
 
 
 @shift_router.post("/clock")
-async def clock_shift(reference_id: str) -> UUID:
+async def clock_shift(reference_id: ReferenceId) -> UUID:
     handler = Dependency.get(ClockShiftCommandHandler)
     return await handler.handle(ClockShiftCommand(reference_id=reference_id))
 
@@ -72,7 +74,7 @@ async def remove_shift(id: UUID) -> None:
     response_model=PaginatedQueryModel[ShiftByReferenceIdQueryModel],
 )
 async def get_shifts_by_reference_id(
-    reference_id: str,
+    reference_id: ReferenceId,
     filters: Annotated[ShiftFiltersInput, Depends()],
     pagination: Annotated[PaginationInput, Depends()],
 ) -> PaginatedQueryModel[ShiftByReferenceIdQueryModel]:
@@ -98,7 +100,7 @@ async def get_shifts_by_date_range(
     date_range: Annotated[DateRangeInput, Depends()],
     filters: Annotated[ShiftFiltersInput, Depends()],
     pagination: Annotated[PaginationInput, Depends()],
-    reference_id: str | None = None,
+    reference_id: ReferenceId | None = None,
 ) -> PaginatedQueryModel[ShiftQueryModel]:
     handler = Dependency.get(GetShiftsInDateRangeQueryHandler)
     return await handler.handle(
