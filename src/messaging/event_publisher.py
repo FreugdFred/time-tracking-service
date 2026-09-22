@@ -2,9 +2,9 @@ from nats.aio.client import Client as NatsClient
 
 from src.core.settings import Settings
 from src.core.unit_of_work import UnitOfWork
-from messaging.commands.repository import CommandMessagingRepository
+from src.messaging.commands.repository import CommandMessagingRepository
 from src.messaging.entity import EventEnvelope
-from messaging.queries.repository import QueryMessagingRepository
+from src.messaging.queries.repository import QueryMessagingRepository
 
 
 class EventPublisher:
@@ -26,10 +26,10 @@ class EventPublisher:
         for event in events:
             await self._publish_event(event)
 
-    async def _publish_event(self, event: EventEnvelope):
+    async def _publish_event(self, event: EventEnvelope) -> None:
         async with UnitOfWork() as session:
             await self.command_repository.set_publish(session, event.id)
             await self.nats_client.publish(
                 subject=f"{self.settings.PROJECT_NAME}.{event.type}",
-                payload=event.model_dump_json().encode(),
+                payload=event.model_dump_json().encode("utf-8"),
             )

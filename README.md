@@ -462,17 +462,23 @@ Available event classes:
 - `PauseFinishChangedEvent`
 - `PauseDeletedEvent`
 
-Every payload contains `reference_id` and `occurrence_datetime`. Shift events
-also contain `shift_id`; pause events contain both `shift_id` and `pause_id`.
-Change events include the previous and new effective value:
+Every payload is an envelope containing `id`, `type`, `subject`,
+`occurrence_datetime`, and `data`. The `subject` is the consumer's reference ID.
+Event-specific fields are nested under `data`: shift events contain `shift_id`;
+pause events contain both `shift_id` and `pause_id`. Change events include the
+previous and new effective value:
 
 ```json
 {
-  "reference_id": "employee-123",
+  "id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d9",
+  "type": "ShiftFinishChangedEvent",
+  "subject": "employee-123",
   "occurrence_datetime": "2026-09-03T09:15:00Z",
-  "shift_id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d8",
-  "previous_finished_at": "2026-09-03T16:30:00Z",
-  "finished_at": "2026-09-03T17:00:00Z"
+  "data": {
+    "shift_id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d8",
+    "previous_finished_at": "2026-09-03T16:30:00Z",
+    "finished_at": "2026-09-03T17:00:00Z"
+  }
 }
 ```
 

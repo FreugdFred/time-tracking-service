@@ -5,7 +5,7 @@ from src.domains.pauses.commands.save_pause.handler import SavePauseCommandHandl
 from src.domains.pauses.queries.get_pause_by_id.handler import (
     GetPauseByIdQueryHandler,
 )
-from domains.pauses.queries.repository import QueryPauseRepository
+from src.domains.pauses.queries.repository import QueryPauseRepository
 
 
 def include_pause_dependencies() -> None:

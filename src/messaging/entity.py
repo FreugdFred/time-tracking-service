@@ -17,3 +17,4 @@ class EventEnvelope(BaseModel):
     type: str
     subject: str
     data: dict[str, Any]
+    occurrence_datetime: datetime
