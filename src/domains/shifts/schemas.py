@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 from pydantic.types import NonNegativeInt
 
-from src.core.schema_types import UtcDateTimeInput
+from src.core.schema_types import ReferenceId, UtcDateTimeInput
 
 
 class DateRangeInput(BaseModel):
@@ -20,7 +20,7 @@ class DateRangeInput(BaseModel):
 
 class SaveShiftInput(BaseModel):
     id: UUID
-    reference_id: str | None = None
+    reference_id: ReferenceId | None = None
 
     started_at: UtcDateTimeInput | None = None
     finished_at: UtcDateTimeInput | None = None

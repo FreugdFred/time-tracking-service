@@ -3,9 +3,11 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from src.core.schema_types import ReferenceId
+
 
 class GetShiftsInDateRangeQuery(BaseModel):
-    reference_id: str | None = None
+    reference_id: ReferenceId | None = None
     start: datetime
     end: datetime
     approved: bool | None = None

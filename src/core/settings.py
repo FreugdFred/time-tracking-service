@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     SHIFT_AUTO_CLOSE_AFTER_HOURS: PositiveInt = 12
+    EVENT_RETENTION_MINUTES: PositiveInt = 10
     API_KEY: str | None = None
 
     DATABASE_URL: AnyUrl

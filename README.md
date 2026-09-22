@@ -94,8 +94,8 @@ The health endpoint remains available without an API key.
 ### Reference IDs
 
 `reference_id` is an opaque string controlled by the API consumer. It is
-commonly an employee ID, but the service does not interpret or validate its
-format.
+commonly an employee ID. It must be at most 255 characters; longer inputs return
+HTTP 422. The service does not otherwise interpret its format.
 
 ### Timestamps
 
@@ -423,8 +423,8 @@ validation-error structure.
 ## NATS events
 
 When `NATS_URL` is configured, successful command handlers publish domain
-events after persistence. When it is unset, commands still work but publish no
-events.
+events after persistence. When it is unset, commands still work but domain
+events are neither stored in the outbox nor published.
 
 Subjects use this format:
 
@@ -462,17 +462,23 @@ Available event classes:
 - `PauseFinishChangedEvent`
 - `PauseDeletedEvent`
 
-Every payload contains `reference_id` and `occurrence_datetime`. Shift events
-also contain `shift_id`; pause events contain both `shift_id` and `pause_id`.
-Change events include the previous and new effective value:
+Every payload is an envelope containing `id`, `type`, `subject`,
+`occurrence_datetime`, and `data`. The `subject` is the consumer's reference ID.
+Event-specific fields are nested under `data`: shift events contain `shift_id`;
+pause events contain both `shift_id` and `pause_id`. Change events include the
+previous and new effective value:
 
 ```json
 {
-  "reference_id": "employee-123",
+  "id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d9",
+  "type": "ShiftFinishChangedEvent",
+  "subject": "employee-123",
   "occurrence_datetime": "2026-09-03T09:15:00Z",
-  "shift_id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d8",
-  "previous_finished_at": "2026-09-03T16:30:00Z",
-  "finished_at": "2026-09-03T17:00:00Z"
+  "data": {
+    "shift_id": "018f6f1e-7f89-7f44-a5b9-c62a854d24d8",
+    "previous_finished_at": "2026-09-03T16:30:00Z",
+    "finished_at": "2026-09-03T17:00:00Z"
+  }
 }
 ```
 
@@ -484,6 +490,11 @@ Events are currently published through Core NATS. The service does not create
 a JetStream stream or durable consumer; consumers that require persistence or
 replay must configure that infrastructure separately.
 
+Published event outbox rows are retained for `EVENT_RETENTION_MINUTES` after
+their `published_at` timestamp. A cleanup job runs once per minute and removes
+rows whose retention period has elapsed. Unpublished rows are never removed by
+this job.
+
 ## Configuration
 
 | Variable | Required | Default | Description |
@@ -494,6 +505,7 @@ replay must configure that infrastructure separately.
 | `PROJECT_NAME` | No | `Time-Tracking-Service-API` | API title and NATS subject prefix. |
 | `LOCAL_TIMEZONE` | No | `Europe/Amsterdam` | Timezone assumed for API timestamps that omit an offset. |
 | `SHIFT_AUTO_CLOSE_AFTER_HOURS` | No | `12` | Age after which the scheduler closes active shifts. |
+| `EVENT_RETENTION_MINUTES` | No | `10` | Minutes to retain published event outbox rows before scheduled cleanup. |
 | `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. |
 | `DEBUG` | No | `false` | Enables FastAPI debug mode. |
 

@@ -18,7 +18,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     import_all_database_models()
 
     settings = Dependency.get(Settings)
-    nats_client = await include_nats_dependency(settings)
+    nats_client = await include_nats_dependency(settings) if settings.NATS_URL else None
 
     scheduler.start()
     logger.info("Application startup completed")
@@ -32,6 +32,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
         if nats_client is not None:
             await nats_client.drain()
-            ''
+
         await Dependency.get(AsyncEngine).dispose()
         logger.info("Application shutdown completed")

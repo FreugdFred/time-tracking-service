@@ -28,9 +28,6 @@ def include_core_dependencies(settings: Settings | None = None) -> None:
 
 
 async def include_nats_dependency(settings: Settings) -> NatsClient | None:
-    if settings.NATS_URL is None:
-        return None
-
     nats_client = await nats.connect(str(settings.NATS_URL))
     Dependency.register_instance(NatsClient, nats_client)
     return nats_client
